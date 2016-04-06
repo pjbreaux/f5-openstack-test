@@ -257,6 +257,20 @@ class NeutronClientPollingManager(PollingMixin):
             return getattr(self.client, name)
 
 
+class HeatClientPollingManager(PollingMixin):
+    '''Utilizes heat client to create/delete heat stacks.'''
+
+    def __init__(self, heatclient, **kwargs):
+        self.client = heatclient
+        self.interval = kwargs.pop('interval', 2)
+        self.attempts = kwargs.pop('attempts', 20)
+
+        if kwargs:
+            raise TypeError('Unexpected **kwargs: {}'.format(kwargs))
+
+    def status_reader9
+    def create_stack(self, configuration):
+
 @pytest.fixture
 def polling_neutronclient():
     '''Invokes Neutronclient methods and polls for target expected states.'''
