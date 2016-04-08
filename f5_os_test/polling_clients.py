@@ -297,3 +297,9 @@ class HeatClientPollingManager(PollingMixin):
 def polling_neutronclient():
     '''Invokes Neutronclient methods and polls for target expected states.'''
     return NeutronClientPollingManager
+
+
+@pytest.fixture
+def polling_heatclient():
+    '''Access to HeatClient polling for create/delete/modify of heat stack.'''
+    return HeatClientPollingManager
