@@ -260,6 +260,14 @@ class NeutronClientPollingManager(PollingMixin):
 class HeatClientPollingManager(PollingMixin):
     '''Utilizes heat client to create/delete heat stacks.'''
 
+    default_stack_config = {
+        'files': {},
+        'disable_rollback': True,
+        'environment': {},
+        'tags': None,
+        'environment_files': None
+    }
+
     def __init__(self, heatclient, **kwargs):
         self.client = heatclient
         self.interval = kwargs.pop('interval', 2)
@@ -268,8 +276,22 @@ class HeatClientPollingManager(PollingMixin):
         if kwargs:
             raise TypeError('Unexpected **kwargs: {}'.format(kwargs))
 
-    def status_reader9
+    def stack_status(self, stack):
+        return stack.stack_status
+
     def create_stack(self, configuration):
+        configuration.update(self.default_stack_config)
+        stack = self.client.stacks.create(**configuration)
+        return self.poll(self.client.stacks.get, stack.id, self.stack_status)
+
+    def delete_stack(self, stack_id):
+        self.client.stacks.delete(stack_id)
+        try:
+            self.poll(self.client.stacks.get, stack_id, self.stack_status)
+        except Exception as ex:
+            if 'could not be found' not in ex:
+                raise
+
 
 @pytest.fixture
 def polling_neutronclient():
