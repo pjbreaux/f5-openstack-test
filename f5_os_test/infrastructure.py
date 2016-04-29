@@ -120,7 +120,7 @@ def setup_with_healthmonitor(setup_with_pool_member):
 
 
 @pytest.fixture
-def get_auth_token(symbols, keystoneclientmanager):
+def get_auth_token(keystoneclientmanager):
     token_id = keystoneclientmanager.auth_ref['token']['id']
     return token_id
 
