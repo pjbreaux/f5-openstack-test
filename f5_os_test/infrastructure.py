@@ -18,46 +18,19 @@ from pprint import pprint as pp
 import pytest
 
 
-def pytest_addoption(parser):
-    parser.addoption("--bigip-netloc", action="store",
-                     help="BIG-IP hostname or IP address")
-    parser.addoption("--bigip-username", action="store",
-                     help="BIG-IP REST username",
-                     default="admin")
-    parser.addoption("--bigip-password", action="store",
-                     help="BIG-IP REST password",
-                     default="admin")
-    parser.addoption("--auth-netloc", action="store",
-                     help="Keystone Authorization server name, or IP address.")
-    parser.addoption("--os-tenant-id", action="store",
-                     help="ID for keystone tenant.")
-    parser.addoption("--os-username", action="store",
-                     help="Openstack username.")
-    parser.addoption("--os-password", action="store",
-                     help="Openstack password.")
-    parser.addoption("--os-tenant-name", action="store",
-                     help="Openstack tenant name.")
-
-
 @pytest.fixture
-def bigip(request, scope="module"):
+def bigip(symbols, scope="module"):
     '''bigip fixture'''
-    opt_bigip = request.config.getoption("--bigip-netloc")
-    opt_username = request.config.getoption("--bigip-username")
-    opt_password = request.config.getoption("--bigip-password")
-    b = BigIP(opt_bigip, opt_username, opt_password)
-    return b
+    return BigIP(symbols.bigip_ip, symbols.bigip_username, symbols.bigip_password)
 
 
 @pytest.fixture
-def nclientmanager(request, polling_neutronclient):
-    auth_url = 'http://%s:5000/v2.0' %\
-        request.config.getoption('--auth-netloc')
+def nclientmanager(symbols, polling_neutronclient):
     nclient_config = {
-        'username': 'testlab',
-        'password': 'changeme',
-        'tenant_name': 'testlab',
-        'auth_url': auth_url}
+        'username':    symbols.tenant_username,
+        'password':    symbols.tenant_password,
+        'tenant_name': symbols.tenant_name,
+        'auth_url':    symbols.auth_url}
 
     pnc = polling_neutronclient(**nclient_config)
     return pnc
@@ -147,43 +120,38 @@ def setup_with_healthmonitor(setup_with_pool_member):
 
 
 @pytest.fixture
-def get_auth_config(request, keystoneclientmanager):
+def get_auth_token(keystoneclientmanager):
     token_id = keystoneclientmanager.auth_ref['token']['id']
-    auth_address = request.config.getoption('--auth-netloc')
-    tenant_id = request.config.getoption('--os-tenant-id')
-    return token_id, auth_address, tenant_id
+    return token_id
 
 
 @pytest.fixture
-def heatclientmanager(heatclient_pollster, get_auth_config):
+def heatclientmanager(heatclient_pollster, get_auth_token, symbols):
     '''Heat client manager fixture.'''
-    token_id, auth_address, tenant_id = get_auth_config
     config_dict = {
-        'endpoint': 'http://{0}:8004/v1/{1}'.format(auth_address, tenant_id),
-        'token': token_id
+        'endpoint': symbols.heatclient_url,
+        'token':    get_auth_token
     }
     return heatclient_pollster(**config_dict)
 
 
 @pytest.fixture
-def keystoneclientmanager(request, keystoneclient_pollster):
+def keystoneclientmanager(symbols, keystoneclient_pollster):
     '''Keystone client manager fixture.'''
-    auth_address = request.config.getoption('--auth-netloc')
     config_dict = {
-        'auth_url': 'http://{}:5000/v2.0'.format(auth_address),
-        'tenant_name': request.config.getoption('--os-tenant-name'),
-        'username': request.config.getoption('--os-username'),
-        'password': request.config.getoption('--os-password')
+        'auth_url':    symbols.auth_url,
+        'tenant_name': symbols.os_tenant_name,
+        'username':    symbols.os_username,
+        'password':    symbols.os_password
     }
     return keystoneclient_pollster(**config_dict)
 
 
 @pytest.fixture
-def glanceclientmanager(glanceclient_pollster, get_auth_config):
+def glanceclientmanager(glanceclient_pollster, get_auth_token, symbols):
     '''Glance client manager fixture.'''
-    token, auth_address, _ = get_auth_config
     config_dict = {
-        'endpoint': 'http://{}:9292'.format(auth_address),
-        'token': token
+        'endpoint': symbols.glanceclient_url,
+        'token':    get_auth_token
     }
     return glanceclient_pollster(**config_dict)
