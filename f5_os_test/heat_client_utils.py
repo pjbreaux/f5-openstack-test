@@ -41,7 +41,7 @@ def HeatStack(heatclientmanager, request):
             teardown=True,
             expect_fail=False
     ):
-        def teardown():
+        def test_teardown():
             heatclientmanager.delete_stack(stack.id)
 
         template = get_file_contents(template_file)
@@ -59,6 +59,6 @@ def HeatStack(heatclientmanager, request):
             target_status=target_status
         )
         if teardown:
-            request.addfinalizer(teardown)
+            request.addfinalizer(test_teardown)
         return heatclientmanager, stack
     return manage_stack
