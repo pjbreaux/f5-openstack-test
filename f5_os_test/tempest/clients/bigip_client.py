@@ -233,3 +233,16 @@ class BigIpClient(object):
         p = self.bigip.tm.ltm.pools.pool.load(
             name=pool_name, partition=partition)
         p.delete()
+
+    def member_exists(self, pool_name, member_name, partition):
+        pool = self.bigip.tm.ltm.pools.pool.load(
+            name=pool_name, partition=partition)
+        return pool.members_s.members.exists(
+            name=member_name, partition=partition)
+
+    def delete_member(self, pool_name, member_name, partition):
+        pool = self.bigip.tm.ltm.pools.pool.load(
+            name=pool_name, partition=partition)
+        member = pool.members_s.members.load(
+            name=member_name, partition=partition)
+        member.delete()
