@@ -18,6 +18,10 @@ from f5.utils.testutils.registrytools import order_by_weights
 from f5.utils.testutils.registrytools import register_device
 from icontrol.exceptions import iControlUnexpectedHTTPError
 
+import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 URI_ORDER = {
     '/mgmt/tm/ltm/policy': 1,
