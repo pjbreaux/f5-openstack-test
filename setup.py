@@ -17,6 +17,7 @@
 
 import f5_os_test
 
+from setuptools import find_packages
 from setuptools import setup
 
 
@@ -29,7 +30,7 @@ setup(
     author_email='f5_common_python@f5.com',
     url='https://github.com/F5Networks/f5-openstack-test',
     keywords=['F5', 'openstack', 'test'],
-    packages=['f5_os_test'],
+    packages=find_packages(),
     entry_points={
         'pytest11': ['poll_fix = f5_os_test.polling_clients',
                      'infra_fix = f5_os_test.infrastructure',
