@@ -16,7 +16,6 @@
 from f5.bigip import ManagementRoot
 from f5.utils.testutils.registrytools import order_by_weights
 from f5.utils.testutils.registrytools import register_device
-from icontrol.exceptions import iControlUnexpectedHTTPError
 
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -53,19 +52,17 @@ class BigIpClient(object):
             frozenset(self.pretest_snapshot)
         uris = order_by_weights(test_diff, URI_ORDER)
         filtered = [u for u in uris for a in URI_ORDER if a in u]
+
+        # Delete all tunnel records, if any exist
+        for t in self.bigip.tm.net.fdb.tunnels.get_collection():
+            if t.name != 'http-tunnel' \
+                    and t.name != 'socks-tunnel':
+                t.update(records=[])
+
+        # Delete resources from device
         for selfLink in filtered:
-            try:
-                if selfLink in test_diff:
-                    posttest_snapshot[selfLink].delete()
-            except iControlUnexpectedHTTPError as exc:
-                if 'fdb/tunnel' in selfLink:
-                    for t in self.bigip.tm.net.fdb.tunnels.get_collection():
-                        if t.name != 'http-tunnel' \
-                                and t.name != 'socks-tunnel':
-                            t.update(records=[])
-                    posttest_snapshot[selfLink].delete()
-                else:
-                    raise exc
+            if selfLink in test_diff:
+                posttest_snapshot[selfLink].delete()
 
     def snapshot_device(self):
         self.pretest_snapshot = register_device(self.bigip)
