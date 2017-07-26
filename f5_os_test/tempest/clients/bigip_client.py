@@ -51,7 +51,6 @@ class BigIpClient(object):
         test_diff = frozenset(posttest_snapshot) - \
             frozenset(self.pretest_snapshot)
         uris = order_by_weights(test_diff, URI_ORDER)
-        filtered = [u for u in uris for a in URI_ORDER if a in u]
 
         # Delete all tunnel records, if any exist
         for t in self.bigip.tm.net.fdb.tunnels.get_collection():
@@ -60,7 +59,7 @@ class BigIpClient(object):
                 t.update(records=[])
 
         # Delete resources from device
-        for selfLink in filtered:
+        for selfLink in uris:
             if selfLink in test_diff:
                 posttest_snapshot[selfLink].delete()
 
